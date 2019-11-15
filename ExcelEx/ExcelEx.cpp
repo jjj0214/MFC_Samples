@@ -7,11 +7,7 @@ const double dbThresholdPicture = 1.333;
 
 CExcelEx::CExcelEx(void)
 {
-	m_covTrue = ((short)TRUE);
-	m_covFalse = ((short)FALSE);
-	m_covOptional = COleVariant((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	m_bIsExcelStarted=FALSE;
-	m_bIsSheetSelected=FALSE;
+	Initialize();
 }
 
 
@@ -449,7 +445,12 @@ void CExcelEx::ShowExcel(BOOL bShow)
 
 void CExcelEx::Initialize(void)
 {
-	QuitExcel();
+	m_covTrue = ((short)TRUE);
+	m_covFalse = ((short)FALSE);
+	m_covOptional = COleVariant((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
+	m_bIsExcelStarted=FALSE;
+	m_bIsSheetSelected=FALSE;
+	QuitExcel();	//처음 시작시 엑셀 프로그램 열기 오류 방지
 }
 
 
