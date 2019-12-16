@@ -31,19 +31,50 @@ void CExcelEx::SaveData(void)
 	END_CATCH
 }
 
+void CExcelEx::SetFont(int nCol, int nRow, long lValue)
+{
+	CExcelRange range;
+	CExcelBorder border;
+	CExcelFont font;
+	CString strPos = GetExcelPos(nCol,nRow);
+	
+	range = m_sheet.get_Range(COleVariant(strPos), COleVariant(strPos));
+	font = range.get_Font();
+	font.put_Color(COleVariant(COleVariant(lValue)));
+}
+
+void CExcelEx::SaveAs(CString strFilePath)
+{
+	TRY
+	{
+		// save
+		m_book.SaveAs(COleVariant(strFilePath),
+			m_covOptional,m_covOptional,m_covOptional,m_covOptional,
+			m_covOptional,1,m_covOptional,m_covOptional,
+			m_covOptional,m_covOptional);
+	}
+	//Clean up if something went wrong.
+	CATCH(CException, e)
+	{
+		AfxMessageBox("Could not save data");
+	}
+	END_CATCH
+}
+
 void CExcelEx::InsertString(int nCol, int nRow, CString strValue)
 {
-	CRange range;
-	CBorder border;
+	CExcelRange range;
+	CExcelBorder border;
 	CString strPos = GetExcelPos(nCol,nRow);
 
 	if(m_bIsSheetSelected==TRUE)
 	{
 		range = m_sheet.get_Range(COleVariant(strPos), COleVariant(strPos));
-		range.Select ();
+		range.Select();
 	
-		border = range.get_Borders();
-		border.put_Weight(COleVariant(xlBorderWeightThin));
+		//range.get_Font();
+		//border = range.get_Borders();
+		//border.put_Weight(COleVariant(xlBorderWeightThin));
 		range.put_Value(COleVariant(strValue));
 	}
 	else
@@ -51,7 +82,6 @@ void CExcelEx::InsertString(int nCol, int nRow, CString strValue)
 		AfxMessageBox ("Sheet is not selected. Select a sheet first.");
 	}
 }
-
 
 CString CExcelEx::GetExcelPos(int nCol, int nRow)
 {
