@@ -1,15 +1,16 @@
 #pragma once
 
-#include "CApplication.h"
-#include "CBorder.h"
-#include "CBorders.h"
-#include "CPicture.h"
-#include "CPictures.h"
-#include "CRange.h"
-#include "CWorkbook.h"
-#include "CWorkbooks.h"
-#include "CWorksheet.h"
-#include "CWorksheets.h"
+#include "CExcelApplication.h"
+#include "CExcelBorder.h"
+#include "CExcelBorders.h"
+#include "CExcelPicture.h"
+#include "CExcelPictures.h"
+#include "CExcelRange.h"
+#include "CExcelWorkbook.h"
+#include "CExcelWorkbooks.h"
+#include "CExcelWorksheet.h"
+#include "CExcelWorksheets.h"
+#include "CExcelFont.h"
 
 class CExcelEx
 {
@@ -18,11 +19,11 @@ public:
 	~CExcelEx(void);
 protected:
 	// spreadsheet variables
-	CApplication	m_app;
-	CWorkbook			m_book;
-	CWorkbooks		m_books;
-	CWorksheet		m_sheet;
-	CWorksheets		m_sheets;
+	CExcelApplication	m_app;
+	CExcelWorkbook			m_book;
+	CExcelWorkbooks		m_books;
+	CExcelWorksheet		m_sheet;
+	CExcelWorksheets		m_sheets;
 	COleVariant		m_covTrue;
 	COleVariant		m_covFalse;
 	COleVariant		m_covOptional;
@@ -39,8 +40,10 @@ public:
 	void SetSheetName(CString strName);
 	void AddSheet(CString strName="");
 	void SaveData(void);
+	void SaveAs(CString strFilePath);
 	int InsertPicture(int nCol, int nRow, CString strPicPath);	//Return: 그림 크기에 따라 삽입 이후에 엑셀에 표시 가능한 row 위치 반환
 	void InsertString(int nCol, int nRow, CString strValue);
+	void SetFont(int nCol, int nRow, long lValue);
 	void ViewSheetNamesExist(CComboBox* pCbBox);
 	void StartExcel(void);
 	void QuitExcel(void);
@@ -49,4 +52,3 @@ public:
 protected:
 	void Initialize(void);
 };
-
