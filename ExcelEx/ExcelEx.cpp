@@ -7,7 +7,11 @@ const double dbThresholdPicture = 1.333;
 
 CExcelEx::CExcelEx(void)
 {
-	Initialize();
+	m_covTrue = ((short)TRUE);
+	m_covFalse = ((short)FALSE);
+	m_covOptional = COleVariant((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
+	m_bIsExcelStarted=FALSE;
+	m_bIsSheetSelected=FALSE;
 }
 
 
@@ -16,7 +20,7 @@ CExcelEx::~CExcelEx(void)
 	QuitExcel();
 }
 
-void CExcelEx::SaveData(void)
+BOOL CExcelEx::SaveData(void)
 {
 	TRY
 	{
@@ -27,23 +31,13 @@ void CExcelEx::SaveData(void)
 	CATCH(CException, e)
 	{
 		AfxMessageBox("Could not save data");
+		return FALSE;
 	}
 	END_CATCH
+	return TRUE;
 }
 
-void CExcelEx::SetFont(int nCol, int nRow, long lValue)
-{
-	CExcelRange range;
-	CExcelBorder border;
-	CExcelFont font;
-	CString strPos = GetExcelPos(nCol,nRow);
-	
-	range = m_sheet.get_Range(COleVariant(strPos), COleVariant(strPos));
-	font = range.get_Font();
-	font.put_Color(COleVariant(COleVariant(lValue)));
-}
-
-void CExcelEx::SaveAs(CString strFilePath)
+BOOL CExcelEx::SaveAs(CString strFilePath)
 {
 	TRY
 	{
@@ -57,8 +51,22 @@ void CExcelEx::SaveAs(CString strFilePath)
 	CATCH(CException, e)
 	{
 		AfxMessageBox("Could not save data");
+		return FALSE;
 	}
 	END_CATCH
+	return TRUE;
+}
+
+void CExcelEx::SetFont(int nCol, int nRow, long lValue)
+{
+	CExcelRange range;
+	CExcelBorder border;
+	CExcelFont font;
+	CString strPos = GetExcelPos(nCol,nRow);
+	
+	range = m_sheet.get_Range(COleVariant(strPos), COleVariant(strPos));
+	font = range.get_Font();
+	font.put_Color(COleVariant(COleVariant(lValue)));
 }
 
 void CExcelEx::InsertString(int nCol, int nRow, CString strValue)
@@ -83,15 +91,16 @@ void CExcelEx::InsertString(int nCol, int nRow, CString strValue)
 	}
 }
 
+
 CString CExcelEx::GetExcelPos(int nCol, int nRow)
 {
 	CString strRet;
 	int nDiv=0, nMod=0;
 	if(nCol>26)
 	{
-		nDiv = nCol / 26;
-		nMod = nCol % 26;
-		strRet.Format("%c%c%d", 0x40+nDiv, 0x40+nMod, nRow);
+		nDiv = (nCol-27) / 26;
+		nMod = (nCol-27) % 26;
+		strRet.Format("%c%c%d", 'A'+nDiv, 'A'+nMod, nRow);
 	}
 	else
 	{
@@ -102,11 +111,10 @@ CString CExcelEx::GetExcelPos(int nCol, int nRow)
 
 int CExcelEx::InsertPicture(int nCol, int nRow, CString strPicPath)
 {
-	POSITION pos;
-	CRange range;
-	CPicture pic;
-	CPictures pics;
-	CBorder border;
+	CExcelRange range;
+	CExcelPicture pic;
+	CExcelPictures pics;
+	CExcelBorder border;
 	CString strPos = GetExcelPos(nCol,nRow);
 	int nNextRow;
 
@@ -130,11 +138,11 @@ int CExcelEx::InsertPicture(int nCol, int nRow, CString strPicPath)
 
 		// get picture height (in cell units)
 		double w = pic.get_Width ();
-		double h = pic.get_Height ()*dbThresholdPicture; // in row height units
+		double h = pic.get_Height ();//*dbThresholdPicture; // in row height units
 		int cells = (int) (h/d)+1;
 		cells += ((h/d - cells) > 0);
 		
-		nNextRow = cells + 1;
+		nNextRow = cells + 1 + nRow;
 
 		// jump to the top of the sheet
 		range = m_sheet.get_Range(COleVariant("A1"), COleVariant("A1"));
@@ -282,7 +290,7 @@ void CExcelEx::usrTerminateProcess(LPCTSTR szImageName)
 			}
 			else
 			{
-				int nCount = strlen(pe32.szExeFile), nCount2 = strlen(szImageName) + 1;
+				int nCount = (int)strlen(pe32.szExeFile), nCount2 = (int)strlen(szImageName) + 1;
 				char szExeFile[255] = { 0, };
 
 				for (; ; )
@@ -326,17 +334,18 @@ void CExcelEx::AddSheet(CString strName)
 {
 	TRY
 	{
-		CWorksheets sheets=m_book.get_Worksheets();
-		CWorksheet sheetLast = sheets.get_Item(COleVariant((short)(sheets.get_Count()))); // sheets are indexed starting from 1
-		CWorksheet sheetFirst = sheets.get_Item(COleVariant(1L)); // sheets are indexed starting from 1
+		CExcelWorksheets sheets= m_book.get_Worksheets();
+		CExcelWorksheet sheetLast = sheets.get_Item(COleVariant((short)(sheets.get_Count()))); // sheets are indexed starting from 1
+		CExcelWorksheet sheetFirst = sheets.get_Item(COleVariant(1L)); // sheets are indexed starting from 1
 		COleVariant vDefault;
 		vDefault.vt = VT_DISPATCH;
 		vDefault.pdispVal = (LPDISPATCH)sheetLast;
 
-		CWorksheet sheetAdded = sheets.Add(m_covOptional, vDefault, COleVariant(1L),COleVariant(-4167L));
+		CExcelWorksheet sheetAdded = sheets.Add(m_covOptional, vDefault, COleVariant(1L),COleVariant(-4167L));
 		if(strName!="")
 			sheetAdded.put_Name(strName);
 		sheetFirst.Activate();
+		vDefault.Detach();
 	}
 	//Clean up if something went wrong.
 	CATCH(CException, e)
@@ -351,8 +360,8 @@ void CExcelEx::ViewSheetNamesExist(CComboBox* pCbBox)
 	// populate combo fields
 	TRY
 	{
-		CWorksheets sheets;
-		CWorksheet sheet;
+		CExcelWorksheets sheets;
+		CExcelWorksheet sheet;
 		sheets = m_book.get_Worksheets();
 
 		// get all the worksheet names and populate the combo box
@@ -414,6 +423,11 @@ void CExcelEx::QuitExcel(void)
 		AfxMessageBox ("Could not quit Excel.");
 	}
 	END_CATCH
+	ExitExcelProcess();
+}
+
+void CExcelEx::ExitExcelProcess()
+{
 	usrTerminateProcess("EXCEL.EXE");
 }
 
@@ -475,12 +489,7 @@ void CExcelEx::ShowExcel(BOOL bShow)
 
 void CExcelEx::Initialize(void)
 {
-	m_covTrue = ((short)TRUE);
-	m_covFalse = ((short)FALSE);
-	m_covOptional = COleVariant((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	m_bIsExcelStarted=FALSE;
-	m_bIsSheetSelected=FALSE;
-	QuitExcel();	//처음 시작시 엑셀 프로그램 열기 오류 방지
+	QuitExcel();
 }
 
 
@@ -488,12 +497,12 @@ CString CExcelEx::ReadData(int nCol, int nRow)
 {
 	CString strPos;
 	CString strRet="";
-	CRange range;
+	CExcelRange range;
 	if(m_bIsSheetSelected==TRUE)
 	{
 		strPos = GetExcelPos(nCol,nRow);
 		range = m_sheet.get_Range(COleVariant(strPos), COleVariant(strPos));
-		strRet = range.get_Value();
+		strRet = range.get_Text();
 	}
 	else
 	{
