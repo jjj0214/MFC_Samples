@@ -39,16 +39,18 @@ public:
 	void SelectSheet(CString strName);
 	void SetSheetName(CString strName);
 	void AddSheet(CString strName="");
-	void SaveData(void);
-	void SaveAs(CString strFilePath);
+	BOOL SaveData(void);
+	BOOL SaveAs(CString strFilePath);
 	int InsertPicture(int nCol, int nRow, CString strPicPath);	//Return: 그림 크기에 따라 삽입 이후에 엑셀에 표시 가능한 row 위치 반환
 	void InsertString(int nCol, int nRow, CString strValue);
 	void SetFont(int nCol, int nRow, long lValue);
 	void ViewSheetNamesExist(CComboBox* pCbBox);
 	void StartExcel(void);
 	void QuitExcel(void);
+	void ExitExcelProcess(void);
 	void ShowExcel(BOOL bShow);
 	CString ReadData(int nCol, int nRow);
 protected:
 	void Initialize(void);
 };
+
