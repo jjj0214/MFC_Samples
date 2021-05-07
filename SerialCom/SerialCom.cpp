@@ -10,7 +10,7 @@ static char THIS_FILE[] = __FILE__;
 
 //IMPLEMENT_DYNCREATE(CSerialCom, CCmdTarget)
 
-//1. 생성자
+//생성자
 CSerialCom::CSerialCom(void)  
 {
 	m_hWnd=NULL;
@@ -21,7 +21,7 @@ CSerialCom::CSerialCom(void)
 	m_pEvent = new CEvent(FALSE,TRUE);
 }
  
-//2. 소멸자
+//소멸자
 CSerialCom::~CSerialCom(void)   
 {
 	if (m_bIsOpenned)
@@ -29,7 +29,7 @@ CSerialCom::~CSerialCom(void)
 	delete m_pEvent;
 }
  
-//3. 통신 연결
+//통신 연결
 BOOL CSerialCom::OpenConnection(BYTE nPort, DWORD nBaudrate, BYTE nSize, BYTE nParity, BYTE nStop)
 {
   //이미 통신이 연결되어 있다면 통신 연결 해제 후 진행
@@ -114,6 +114,7 @@ void CSerialCom::CloseConnection(void)
 	Sleep(500);
 }
 
+//핸들 종료
 void CSerialCom::HandleClose(void)
 {
 	CloseHandle(m_hComm);
@@ -121,6 +122,7 @@ void CSerialCom::HandleClose(void)
 	CloseHandle(m_OLR.hEvent);
 }
 
+//핸들 초기화
 void CSerialCom::Clear(void)
 {
   PurgeComm(m_hComm, PURGE_TXABORT|PURGE_RXABORT|PURGE_TXCLEAR|PURGE_RXCLEAR);
@@ -128,7 +130,7 @@ void CSerialCom::Clear(void)
   m_nLength = 0;
 }
  
-//5. DCB Structure 설정
+//DCB Structure 설정
 BOOL CSerialCom::SetDCB(DWORD nBaudrate, BYTE nSize, BYTE nParity,  BYTE nStop)
 {
   DCB dcb;
@@ -149,7 +151,7 @@ BOOL CSerialCom::SetDCB(DWORD nBaudrate, BYTE nSize, BYTE nParity,  BYTE nStop)
   return (SetCommState(m_hComm, &dcb) != 0);  //C4800 해결
 }
  
-//6. Timeout 설정
+//Timeout 설정
 BOOL CSerialCom::SetTimeouts(void)
 {
   COMMTIMEOUTS  CommTimeOuts; 
@@ -167,6 +169,7 @@ BOOL CSerialCom::Create(HWND hWnd)
 	return TRUE;
 }
 
+//TX SEND
 BOOL CSerialCom::SendMsg(CString sMsg)
 {
 	char lpBuffer[MAX_BUF]={0,};
@@ -204,6 +207,7 @@ BOOL CSerialCom::SendMsg(CString sMsg)
 	return bRet;
 }
 
+//RX Receive
 int CSerialCom::Receive(LPSTR inbuf, int len)
 {
 	CSingleLock lockObj((CSyncObject*) m_pEvent,FALSE);
@@ -271,7 +275,7 @@ UINT CSerialCom::CommThread(LPVOID lpData)
 				// overlapped I/O를 통해 데이터를 읽음
 				if (!ReadFile(Comm->m_hComm,buf+insize,size,&Length,&(Comm->m_OLR))) {
 					// 에러
-					TRACE("Error in ReadFilen");
+					TRACE("Error in ReadFile");
 					if (GetLastError() == ERROR_IO_PENDING)       {
 						if (WaitForSingleObject(Comm->m_OLR.hEvent, 1000) != WAIT_OBJECT_0)
 							Length = 0;
@@ -304,4 +308,4 @@ UINT CSerialCom::CommThread(LPVOID lpData)
 	// 쓰레드가 종료될 때 종료 메시지를 보냄
 	SendMessage(Comm->m_hWnd,WM_MYCLOSE,0,temp);
 	return 0;
-}																																																																																													
+}
