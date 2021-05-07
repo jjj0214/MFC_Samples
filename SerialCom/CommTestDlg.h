@@ -5,7 +5,7 @@
 #pragma once
 #include "SerialCom.h"
 #include "afxwin.h"
-
+#include "SerialCom\ComPortCombo.h"
 
 // CCommTestDlg 대화 상자
 class CCommTestDlg : public CDialogEx
@@ -16,7 +16,7 @@ public:
 
 // 대화 상자 데이터입니다.
 	enum { IDD = IDD_COMMTEST_DIALOG };
-
+	
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 지원입니다.
 
@@ -34,7 +34,6 @@ public:
   CSerialCom* m_Comm;
 	afx_msg void OnBnClickedBtnConnect();
 	afx_msg void OnBnClickedBtnDisconnect();
-	int m_nIdxPort;
 protected:
 	afx_msg LRESULT OnMyclose(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnMyreceive(WPARAM wParam, LPARAM lParam);
@@ -42,4 +41,5 @@ public:
 	afx_msg void OnBnClickedBtnSend();
 	CRichEditCtrl	m_LogRecv;	
 	void AddLogMsg(CString sStr);
+	CComPortCombo m_cbPort;
 };
