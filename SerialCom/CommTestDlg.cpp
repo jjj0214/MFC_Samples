@@ -18,15 +18,16 @@
 
 CCommTestDlg::CCommTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CCommTestDlg::IDD, pParent)
-	, m_nIdxPort(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_Comm=NULL;
 }
 
 void CCommTestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_CBIndex(pDX, IDC_CBB_PORT, m_nIdxPort);
+	DDX_Control(pDX, IDC_CBB_PORT, m_cbPort);
+	
 	DDX_Control(pDX, IDC_REDIT_RECV, m_LogRecv);
 }
 
@@ -53,9 +54,7 @@ BOOL CCommTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
-	((CComboBox*)GetDlgItem(IDC_CBB_PORT))->SetCurSel(0);
-
-
+	m_cbPort.InitList();
  
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -101,7 +100,12 @@ HCURSOR CCommTestDlg::OnQueryDragIcon()
 void CCommTestDlg::OnBnClickedBtnConnect()
 {
 	UpdateData(TRUE);
-	
+
+	if(m_Comm != NULL)
+	{
+		return;
+	}
+
 	m_Comm = new CSerialCom();
 	if(m_Comm->Create(GetSafeHwnd())!=0)
 	{
@@ -111,18 +115,18 @@ void CCommTestDlg::OnBnClickedBtnConnect()
 	{
 		AfxMessageBox("Create CSerialCom Failed");
 	}
-	
-	int nPort = m_nIdxPort + 1;
-  if(m_Comm->OpenConnection(nPort,CBR_115200,8,NOPARITY,ONESTOPBIT) == true)
-  {
-    //Connection Success
-		AfxMessageBox("Connected");
-  }
-  else
-  {
+
+	int nPort = m_cbPort.GetPortNum();
+	if(m_Comm->OpenConnection(nPort,CBR_115200,8,NOPARITY,ONESTOPBIT) == TRUE)
+	{
+		//Connection Success
+		AddLogMsg("Connected");
+	}
+	else
+	{
 		AfxMessageBox("Connection Error[Port 설정 재확인]");
-    //Connection Error
-  }
+		//Connection Error
+	}
 }
 
 
@@ -132,7 +136,7 @@ void CCommTestDlg::OnBnClickedBtnDisconnect()
 	{
 		m_Comm->CloseConnection();
 		m_Comm=NULL;
-		AfxMessageBox("Disconnected");
+		AddLogMsg("Disconnected");
 	}
 }
 
